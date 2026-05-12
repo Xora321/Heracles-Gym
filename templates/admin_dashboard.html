@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin Dashboard - Gym Heracles</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-danger mb-4 shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="/admin">🛡️ Admin Control Panel</a>
+            <div class="d-flex text-white align-items-center">
+                <span class="me-3">Admin: <strong>{{ user }}</strong></span>
+                <a href="/" class="btn btn-outline-light btn-sm me-2">Main Site</a>
+                <a href="/logout" class="btn btn-dark btn-sm">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        
+        <div class="card shadow-sm border-0 mb-5">
+            <div class="card-header bg-dark text-white fw-bold py-3 d-flex justify-content-between align-items-center">
+                <span>🏷️ Manage Membership Plans</span>
+            </div>
+            <div class="card-body">
+                <form action="/admin/create-plan" method="POST" class="row g-3 mb-4 border-bottom pb-4">
+                    <div class="col-md-3">
+                        <input type="text" name="plan_name" class="form-control" placeholder="Plan Name (e.g., VIP Annual)" required>
+                    </div>
+                    <div class="col-md-4">
+                        <input type="text" name="description" class="form-control" placeholder="Description" required>
+                    </div>
+                    <div class="col-md-2">
+                        <input type="number" step="0.01" name="price" class="form-control" placeholder="Price (RM)" required>
+                    </div>
+                    <div class="col-md-2">
+                        <input type="number" name="duration_days" class="form-control" placeholder="Duration (Days)" required>
+                    </div>
+                    <div class="col-md-1">
+                        <button type="submit" class="btn btn-primary w-100">Add</button>
+                    </div>
+                </form>
+
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Plan ID</th>
+                            <th>Name</th>
+                            <th>Description</th>
+                            <th>Price (RM)</th>
+                            <th>Duration (Days)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for plan in plans %}
+                        <tr>
+                            <td>{{ plan.plan_id }}</td>
+                            <td class="fw-bold">{{ plan.plan_name }}</td>
+                            <td>{{ plan.description }}</td>
+                            <td>{{ plan.price }}</td>
+                            <td>{{ plan.duration_days }}</td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="5" class="text-center text-muted">No membership plans created yet.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="card shadow-sm border-0 mb-5">
+            <div class="card-header bg-secondary text-white fw-bold py-3">
+                👥 Registered Members (PDPA View)
+            </div>
+            <div class="card-body p-0">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>User ID</th>
+                            <th>Full Name</th>
+                            <th>Email</th>
+                            <th>IC Number</th>
+                            <th>Joined Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for m in members %}
+                        <tr>
+                            <td>{{ m.user_id }}</td>
+                            <td class="fw-bold">{{ m.full_name }}</td>
+                            <td>{{ m.email }}</td>
+                            <td><span class="badge bg-warning text-dark border">{{ m.ic_number }}</span></td>
+                            <td>{{ m.created_at.strftime('%Y-%m-%d') }}</td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="5" class="text-center text-muted py-3">No members found.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+</body>
+</html>

@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Edit Question - MathPeerSupport</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    
+    <style>
+        /* THEME VARIABLES (Matching Dashboard & Ask Page) */
+        :root {
+            --primary-dark: #0f2537; /* Midnight Navy */
+            --primary-light: #2c3e50; /* Slate Blue */
+            --accent-color: #e67e22; /* Carrot Orange */
+        }
+
+        body {
+            /* Soft Gradient Background */
+            background-color: #f0f2f5;
+            background-image: linear-gradient(315deg, #f0f2f5 0%, #d9e4f5 74%);
+            min-height: 100vh;
+        }
+
+        /* Navbar */
+        .bg-custom-dark {
+            background-color: var(--primary-dark) !important;
+        }
+
+        /* Card Header */
+        .card-header-custom {
+            background-color: var(--primary-light) !important;
+            color: white;
+            font-weight: 600;
+        }
+
+        /* Custom Save Button */
+        .btn-custom-save {
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            font-weight: 600;
+        }
+        .btn-custom-save:hover {
+            background-color: #d35400; /* Darker Orange */
+            color: white;
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-custom-dark mb-4 shadow">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="/">
+                <i class="bi bi-calculator me-2"></i>MathPeerSupport
+            </a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                
+                <div class="card shadow border-0 mb-5">
+                    
+                    <div class="card-header card-header-custom py-3">
+                        <i class="bi bi-pencil-fill me-2"></i>Edit Your Question
+                    </div>
+
+                    <div class="card-body p-4">
+                        
+                        <form method="POST">
+                            
+                            <div class="mb-4">
+                                <label class="form-label fw-bold text-dark">Question Title</label>
+                                <input type="text" name="title" class="form-control form-control-lg" required value="{{ question.title }}">
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="form-label fw-bold text-dark">Description / Context</label>
+                                <textarea name="details" class="form-control" rows="6" required>{{ question.details }}</textarea>
+                            </div>
+
+                            <div class="alert alert-warning d-flex align-items-center mb-4" role="alert">
+                                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                <div>
+                                    <small>Note: You cannot change the uploaded image here. If you need to replace the image, please delete this question and ask a new one.</small>
+                                </div>
+                            </div>
+
+                            <div class="d-flex justify-content-end gap-2 mt-4">
+                                <a href="/" class="btn btn-outline-secondary px-4">Cancel</a>
+                                <button type="submit" class="btn btn-custom-save px-4 py-2">
+                                    <i class="bi bi-check-lg me-2"></i>Save Changes
+                                </button>
+                            </div>
+
+                        </form>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

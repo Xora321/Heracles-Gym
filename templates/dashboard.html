@@ -1,52 +1,219 @@
 <!DOCTYPE html>
-<html>
+<html data-bs-theme="dark">
 <head>
-    <title>Dashboard - Gym Heracles</title>
+    <title>Gym Heracles</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Orbitron:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* Base State: NOT CHECKED IN (Creation of Adam) */
+        body { 
+            background-color: #111111; 
+            background-image: url('/static/creation-bg.jpg');
+            background-size: cover;
+            background-position: center;
+            background-blend-mode: overlay;
+            height: 100vh;
+            overflow: hidden;
+            font-family: 'Cinzel', serif;
+        }
+        
+        /* Active State: CHECKED IN (Hercules Statue) */
+        body.gym-active {
+            background-color: #2a2a2a;
+            background-image: url('/static/heracles-bg.jpg');
+            background-size: cover;
+            background-position: center;
+            background-blend-mode: overlay; 
+        }
+
+        /* --- THE GREEK PILLARS --- */
+        .pillar {
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            width: 12vw; 
+            max-width: 130px;
+            background-image: url('https://upload.wikimedia.org/wikipedia/commons/7/74/Ionic_column.svg');
+            background-size: contain;
+            background-repeat: repeat-y;
+            background-position: center top;
+            z-index: 0; 
+            opacity: 0.25; 
+            pointer-events: none; 
+        }
+        .pillar-left { left: 10px; }
+        .pillar-right { right: 10px; transform: scaleX(-1); }
+
+        /* Action Button */
+        .btn-heracles {
+            width: 180px; 
+            height: 180px; 
+            border-radius: 50%;
+            background-color: #d3d3d3; 
+            color: #111111; 
+            border: none;
+            font-size: 1.2rem; 
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            transition: transform 0.2s;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.15);
+            position: relative;
+            z-index: 10;
+        }
+        .btn-heracles:hover { transform: scale(1.05); }
+
+        /* Timer */
+        .timer-container {
+            position: relative;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #workout-timer {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.8rem; 
+            font-weight: 400; 
+            letter-spacing: 4px;
+            color: #ffffff;
+            text-shadow: 0 0 10px rgba(255,255,255,0.3);
+            border: 2px solid #ffffff; 
+            padding: 12px 25px; 
+            background-color: rgba(0, 0, 0, 0.6); 
+            box-shadow: 0 0 15px rgba(0,0,0,0.8);
+        }
+
+        /* End Button */
+        .btn-end {
+            font-size: 1.1rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            padding: 8px 30px;
+            border-radius: 0; 
+            border: 1px solid #ffffff;
+            transition: all 0.2s;
+        }
+        .btn-end:hover {
+            background-color: #dc3545; 
+            border-color: #dc3545;
+        }
+
+        /* FIXED: Reduced z-index to 1030 so it hides behind the sidebar */
+        .menu-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            font-size: 2.5rem;
+            background: none;
+            border: none;
+            color: white;
+            z-index: 1030; 
+            text-shadow: 2px 2px 5px black; 
+        }
+        
+        .offcanvas { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+        .offcanvas-title { font-family: 'Cinzel', serif; }
+        
+        /* New styling for the sidebar navigation buttons */
+        .nav-menu-btn {
+            text-align: left;
+            padding: 15px 20px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            border: 1px solid #333;
+            transition: all 0.2s ease;
+        }
+        .nav-menu-btn:hover {
+            background-color: #d3d3d3;
+            color: #000 !important;
+            border-color: #d3d3d3;
+        }
+    </style>
 </head>
-<body class="bg-light">
+<body class="text-white {% if is_checked_in %}gym-active{% endif %}">
 
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4 shadow-sm">
-        <div class="container">
-            <a class="navbar-brand fw-bold" href="/">🏋️ Gym Heracles</a>
-            <div class="d-flex text-white align-items-center">
-                <span class="me-3">Logged in as: <strong>{{ user }}</strong></span>
-                <a href="/logout" class="btn btn-outline-light btn-sm">Logout</a>
-            </div>
+    <div class="pillar pillar-left"></div>
+    <div class="pillar pillar-right"></div>
+
+    <button class="menu-btn" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarMenu">
+        &#9776;
+    </button>
+
+    <div class="offcanvas offcanvas-start text-bg-dark" tabindex="-1" id="sidebarMenu">
+        <div class="offcanvas-header border-bottom border-secondary">
+            <h4 class="offcanvas-title fw-bold text-uppercase mt-2">Gym Heracles</h4>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
         </div>
-    </nav>
+        
+        <div class="offcanvas-body d-flex flex-column">
+            <p class="text-muted mb-4 px-2">Logged in as:<br><strong class="text-white">{{ user }}</strong></p>
 
-    <div class="container">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2 class="fw-bold text-dark">Member Dashboard</h2>
-        </div>
-
-        <div class="row">
-            <div class="col-md-6 mb-4">
-                <div class="card shadow-sm border-0 h-100">
-                    <div class="card-header bg-primary text-white fw-bold py-3">
-                        📋 My Active Subscription
-                    </div>
-                    <div class="card-body p-4">
-                        <p class="text-muted mb-0">No active plans found. Please contact an Administrator to assign a membership plan to your account.</p>
-                    </div>
-                </div>
+            <div class="d-flex flex-column gap-3 mb-auto">
+                <a href="/subscription" class="btn btn-outline-light nav-menu-btn text-uppercase">
+                    💳 My Subscription
+                </a>
+                <a href="/sessions" class="btn btn-outline-light nav-menu-btn text-uppercase">
+                    ⏱️ Session History
+                </a>
             </div>
 
-            <div class="col-md-6 mb-4">
-                <div class="card shadow-sm border-0 h-100">
-                    <div class="card-header bg-success text-white fw-bold py-3">
-                        ⏱️ Recent Attendance
-                    </div>
-                    <div class="card-body p-4">
-                        <p class="text-muted mb-0">You have no recent check-ins.</p>
-                    </div>
-                </div>
-            </div>
+            <a href="/logout" class="btn btn-outline-danger w-100 mt-4 fw-bold text-uppercase py-3">Logout</a>
         </div>
     </div>
 
+    <div class="container h-100 d-flex flex-column justify-content-center align-items-center">
+        
+        {% if is_checked_in %}
+            <div class="timer-container">
+                <div id="workout-timer" class="mb-4">00:00:00</div>
+                
+                <form action="/attendance/check-out" method="POST">
+                    <button type="submit" class="btn btn-dark btn-end text-light w-100">END</button>
+                </form>
+            </div>
+
+            <input type="hidden" id="checkin-time" value="{{ attendance[0].check_in_time }}">
+        
+        {% else %}
+            <form action="/attendance/check-in" method="POST" class="position-relative z-3">
+                <button type="submit" class="btn btn-heracles">
+                    Be<br>Heracles
+                </button>
+            </form>
+        {% endif %}
+
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        const checkinInput = document.getElementById('checkin-time');
+        
+        if (checkinInput && checkinInput.value) {
+            const startTime = new Date(checkinInput.value.replace(' ', 'T')).getTime();
+            const timerDisplay = document.getElementById('workout-timer');
+
+            setInterval(() => {
+                const now = new Date().getTime();
+                const diff = Math.max(0, now - startTime);
+
+                const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+                timerDisplay.innerHTML = 
+                    String(hours).padStart(2, '0') + ":" + 
+                    String(minutes).padStart(2, '0') + ":" + 
+                    String(seconds).padStart(2, '0');
+            }, 1000);
+        }
+    </script>
 </body>
 </html>

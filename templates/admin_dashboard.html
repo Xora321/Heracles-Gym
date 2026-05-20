@@ -1,106 +1,244 @@
 <!DOCTYPE html>
-<html>
+<html data-bs-theme="dark">
 <head>
     <title>Admin Dashboard - Gym Heracles</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body class="bg-light">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Orbitron:wght@400;500;700&display=swap" rel="stylesheet">
 
-    <nav class="navbar navbar-expand-lg navbar-dark bg-danger mb-4 shadow-sm">
-        <div class="container">
-            <a class="navbar-brand fw-bold" href="/admin">🛡️ Admin Control Panel</a>
-            <div class="d-flex text-white align-items-center">
-                <span class="me-3">Admin: <strong>{{ user }}</strong></span>
-                <a href="/" class="btn btn-outline-light btn-sm me-2">Main Site</a>
-                <a href="/logout" class="btn btn-dark btn-sm">Logout</a>
-            </div>
-        </div>
-    </nav>
+    <style>
+        body { 
+            background-color: #111111; 
+            background-image: url('/static/creation-bg.jpg');
+            background-size: cover;
+            background-position: center;
+            background-blend-mode: overlay;
+            background-attachment: fixed;
+            min-height: 100vh;
+            font-family: 'Cinzel', serif;
+        }
 
-    <div class="container">
+        /* --- THE GREEK PILLARS --- */
+        .pillar {
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            width: 12vw; 
+            max-width: 130px;
+            background-image: url('https://upload.wikimedia.org/wikipedia/commons/7/74/Ionic_column.svg');
+            background-size: contain;
+            background-repeat: repeat-y;
+            background-position: center top;
+            z-index: 0; 
+            opacity: 0.15; 
+            pointer-events: none; 
+        }
+        .pillar-left { left: 10px; }
+        .pillar-right { right: 10px; transform: scaleX(-1); }
+
+        .menu-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            font-size: 2.5rem;
+            background: none;
+            border: none;
+            color: white;
+            z-index: 1030; 
+            text-shadow: 2px 2px 5px black; 
+        }
         
-        <div class="card shadow-sm border-0 mb-5">
-            <div class="card-header bg-dark text-white fw-bold py-3 d-flex justify-content-between align-items-center">
-                <span>🏷️ Manage Membership Plans</span>
-            </div>
-            <div class="card-body">
-                <form action="/admin/create-plan" method="POST" class="row g-3 mb-4 border-bottom pb-4">
-                    <div class="col-md-3">
-                        <input type="text" name="plan_name" class="form-control" placeholder="Plan Name (e.g., VIP Annual)" required>
-                    </div>
-                    <div class="col-md-4">
-                        <input type="text" name="description" class="form-control" placeholder="Description" required>
-                    </div>
-                    <div class="col-md-2">
-                        <input type="number" step="0.01" name="price" class="form-control" placeholder="Price (RM)" required>
-                    </div>
-                    <div class="col-md-2">
-                        <input type="number" name="duration_days" class="form-control" placeholder="Duration (Days)" required>
-                    </div>
-                    <div class="col-md-1">
-                        <button type="submit" class="btn btn-primary w-100">Add</button>
-                    </div>
-                </form>
+        .offcanvas { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+        .offcanvas-title { font-family: 'Cinzel', serif; }
+        
+        /* Admin Card Styling */
+        .admin-card {
+            background-color: rgba(17, 17, 17, 0.9);
+            border: 1px solid #444;
+            backdrop-filter: blur(8px);
+            position: relative;
+            z-index: 10;
+        }
 
-                <table class="table table-hover">
-                    <thead>
-                        <tr>
-                            <th>Plan ID</th>
-                            <th>Name</th>
-                            <th>Description</th>
-                            <th>Price (RM)</th>
-                            <th>Duration (Days)</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for plan in plans %}
-                        <tr>
-                            <td>{{ plan.plan_id }}</td>
-                            <td class="fw-bold">{{ plan.plan_name }}</td>
-                            <td>{{ plan.description }}</td>
-                            <td>{{ plan.price }}</td>
-                            <td>{{ plan.duration_days }}</td>
-                        </tr>
-                        {% else %}
-                        <tr><td colspan="5" class="text-center text-muted">No membership plans created yet.</td></tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+        /* Table font overrides for readability */
+        .table { font-family: -apple-system, sans-serif; }
+        .font-cinzel { font-family: 'Cinzel', serif; }
+        .font-sans-serif { font-family: -apple-system, sans-serif; }
+    </style>
+</head>
+<body class="text-white">
+
+    <div class="pillar pillar-left"></div>
+    <div class="pillar pillar-right"></div>
+
+    <button class="menu-btn" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarMenu">
+        &#9776;
+    </button>
+
+    <div class="offcanvas offcanvas-start text-bg-dark" tabindex="-1" id="sidebarMenu">
+        <div class="offcanvas-header border-bottom border-danger">
+            <h4 class="offcanvas-title fw-bold text-uppercase mt-2 text-danger">Admin Panel</h4>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
         </div>
+        <div class="offcanvas-body d-flex flex-column">
+            <p class="text-muted mb-4 px-2 font-cinzel">Logged in as:<br><strong class="text-white">{{ user }}</strong></p>
+            
+            <div class="d-flex flex-column gap-3 mb-auto">
+                <a href="/admin" class="btn btn-danger text-uppercase fw-bold text-start px-3 py-2">
+                    🛡️ Dashboard
+                </a>
+                </div>
 
-        <div class="card shadow-sm border-0 mb-5">
-            <div class="card-header bg-secondary text-white fw-bold py-3">
-                👥 Registered Members (PDPA View)
-            </div>
-            <div class="card-body p-0">
-                <table class="table table-hover mb-0">
-                    <thead class="table-light">
-                        <tr>
-                            <th>User ID</th>
-                            <th>Full Name</th>
-                            <th>Email</th>
-                            <th>IC Number</th>
-                            <th>Joined Date</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for m in members %}
-                        <tr>
-                            <td>{{ m.user_id }}</td>
-                            <td class="fw-bold">{{ m.full_name }}</td>
-                            <td>{{ m.email }}</td>
-                            <td><span class="badge bg-warning text-dark border">{{ m.ic_number }}</span></td>
-                            <td>{{ m.created_at.strftime('%Y-%m-%d') }}</td>
-                        </tr>
-                        {% else %}
-                        <tr><td colspan="5" class="text-center text-muted py-3">No members found.</td></tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+            <a href="/logout" class="btn btn-outline-secondary w-100 mt-4 fw-bold text-uppercase py-3 font-cinzel">Logout</a>
         </div>
-
     </div>
+
+    <div class="container pt-5 pb-5 mt-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-12">
+                
+                <h2 class="fw-bold text-uppercase mb-5 text-center text-light shadow-sm position-relative z-10" style="text-shadow: 2px 2px 10px black;">
+                    Olympus Control
+                </h2>
+
+                <div class="card admin-card shadow-lg mb-5">
+                    <div class="card-header bg-black text-white border-bottom border-secondary py-3 font-cinzel">
+                        <h5 class="m-0 fw-bold tracking-widest text-uppercase">🏷️ Membership Plans</h5>
+                    </div>
+                    <div class="card-body p-4">
+                        
+                        <form action="/admin/create-plan" method="POST" class="row g-3 mb-4 border-bottom border-secondary pb-4 font-sans-serif">
+                            <div class="col-md-3">
+                                <input type="text" name="plan_name" class="form-control bg-dark text-white border-secondary" placeholder="Plan Name (e.g., VIP)" required>
+                            </div>
+                            <div class="col-md-4">
+                                <input type="text" name="description" class="form-control bg-dark text-white border-secondary" placeholder="Description" required>
+                            </div>
+                            <div class="col-md-2">
+                                <input type="number" step="0.01" name="price" class="form-control bg-dark text-white border-secondary" placeholder="Price (RM)" required>
+                            </div>
+                            <div class="col-md-2">
+                                <input type="number" name="duration_days" class="form-control bg-dark text-white border-secondary" placeholder="Duration (Days)" required>
+                            </div>
+                            <div class="col-md-1">
+                                <button type="submit" class="btn btn-light w-100 fw-bold">Add</button>
+                            </div>
+                        </form>
+
+                        <div class="table-responsive">
+                            <table class="table table-dark table-hover mb-0 align-middle">
+                                <thead class="font-cinzel text-secondary">
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Name</th>
+                                        <th>Price (RM)</th>
+                                        <th>Duration</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for plan in plans %}
+                                    <tr>
+                                        <td class="text-muted">{{ plan.plan_id }}</td>
+                                        <td class="fw-bold text-light">{{ plan.plan_name }}</td>
+                                        <td>{{ plan.price }}</td>
+                                        <td>{{ plan.duration_days }} Days</td>
+                                        <td>
+                                            <a href="/admin/delete-plan/{{ plan.plan_id }}" class="btn btn-outline-danger btn-sm font-sans-serif fw-bold" onclick="return confirm('Are you sure you want to permanently delete this plan?');">
+                                                Delete
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% else %}
+                                    <tr><td colspan="5" class="text-center text-secondary py-4">No plans created.</td></tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card admin-card shadow-lg mb-5">
+                    <div class="card-header bg-black text-white border-bottom border-secondary py-3 font-cinzel">
+                        <h5 class="m-0 fw-bold tracking-widest text-uppercase">👥 Citizen Roster & Assignment</h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive p-4">
+                            <table class="table table-dark table-hover mb-0 align-middle">
+                                <thead class="font-cinzel text-secondary">
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Name / Email</th>
+                                        <th>IC Number</th>
+                                        <th>Current Plan</th>
+                                        <th>Manage Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for m in members %}
+                                    <tr>
+                                        <td class="text-muted">{{ m.user_id }}</td>
+                                        <td>
+                                            <strong class="d-block text-light">{{ m.full_name }}</strong>
+                                            <small class="text-secondary">{{ m.email }}</small>
+                                        </td>
+                                        <td><span class="badge bg-secondary text-dark">{{ m.ic_number }}</span></td>
+                                        
+                                        <td>
+                                            {% if m.plan_name %}
+                                                <span class="badge bg-success mb-1">{{ m.plan_name }}</span><br>
+                                                <small class="text-secondary font-monospace" style="font-size: 0.75rem;">Expires: {{ m.end_date }}</small>
+                                            {% else %}
+                                                <span class="badge bg-secondary text-dark">None</span>
+                                            {% endif %}
+                                        </td>
+
+                                        <td>
+                                            <div class="d-flex align-items-center gap-2 m-0 flex-wrap">
+                                                
+                                                <form action="/admin/assign-plan" method="POST" class="d-flex m-0 gap-2">
+                                                    <input type="hidden" name="user_id" value="{{ m.user_id }}">
+                                                    <select name="plan_id" class="form-select form-select-sm bg-dark text-white border-secondary" style="max-width: 150px;" required>
+                                                        <option value="" disabled selected>Select Plan...</option>
+                                                        {% for p in plans %}
+                                                            <option value="{{ p.plan_id }}">{{ p.plan_name }}</option>
+                                                        {% endfor %}
+                                                    </select>
+                                                    <button type="submit" class="btn btn-outline-light btn-sm fw-bold px-2">Assign</button>
+                                                </form>
+
+                                                <form action="/admin/cancel-plan" method="POST" class="m-0" onsubmit="return confirm('Are you sure you want to cancel the active plan for this member?');">
+                                                    <input type="hidden" name="user_id" value="{{ m.user_id }}">
+                                                    <button type="submit" class="btn btn-outline-warning btn-sm fw-bold" title="Cancel Active Plan">Revoke</button>
+                                                </form>
+
+                                                <a href="/admin/edit-member/{{ m.user_id }}" class="btn btn-outline-primary btn-sm fw-bold">✏️ Edit</a>
+
+                                                <a href="/admin/member/{{ m.user_id }}" class="btn btn-outline-info btn-sm fw-bold">🔍 Inspect</a>
+                                                
+                                                <form action="/admin/delete-member/{{ m.user_id }}" method="POST" class="m-0" onsubmit="return confirm('PDPA WARNING: This will permanently delete ALL personal data, attendance, and subscription records for this member. Proceed?');">
+                                                    <button type="submit" class="btn btn-outline-danger btn-sm fw-bold" title="Erase Personal Data">🗑️ Erase</button>
+                                                </form>
+
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% else %}
+                                    <tr><td colspan="5" class="text-center text-secondary py-5">No regular members found.</td></tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

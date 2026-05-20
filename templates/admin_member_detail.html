@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html data-bs-theme="dark">
+<head>
+    <title>Member Inspection - Gym Heracles</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Orbitron:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body { 
+            background-color: #111111; 
+            background-image: url('/static/creation-bg.jpg');
+            background-size: cover;
+            background-position: center;
+            background-blend-mode: overlay;
+            background-attachment: fixed;
+            min-height: 100vh;
+            font-family: -apple-system, sans-serif;
+        }
+        .admin-card {
+            background-color: rgba(17, 17, 17, 0.95);
+            border: 1px solid #444;
+            backdrop-filter: blur(8px);
+        }
+        .font-cinzel { font-family: 'Cinzel', serif; }
+    </style>
+</head>
+<body class="text-white pt-5 pb-5">
+
+    <div class="container">
+        
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="fw-bold text-uppercase m-0 font-cinzel text-light shadow-sm" style="text-shadow: 2px 2px 10px black;">
+                🔍 Citizen Inspection
+            </h2>
+            <a href="/admin" class="btn btn-outline-light btn-sm fw-bold">← Back to Olympus</a>
+        </div>
+
+        <div class="row">
+            <div class="col-md-4 mb-4">
+                <div class="card admin-card shadow-lg h-100">
+                    <div class="card-header bg-black text-white border-bottom border-secondary py-3 font-cinzel">
+                        <h5 class="m-0 fw-bold tracking-widest text-uppercase">Profile Data</h5>
+                    </div>
+                    <div class="card-body p-4">
+                        <small class="text-muted text-uppercase d-block mb-1">Full Name</small>
+                        <h4 class="fw-bold text-light mb-4">{{ target_user.full_name }}</h4>
+
+                        <small class="text-muted text-uppercase d-block mb-1">Email Address</small>
+                        <p class="mb-4">{{ target_user.email }}</p>
+
+                        <small class="text-muted text-uppercase d-block mb-1">IC Number (PDPA Protected)</small>
+                        <span class="badge bg-secondary text-dark fs-6 mb-4">{{ target_user.ic_number }}</span>
+
+                        <small class="text-muted text-uppercase d-block mb-1">Account Created</small>
+                        <p class="mb-0 text-secondary">{{ target_user.created_at }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-8">
+                
+                <div class="card admin-card shadow-lg mb-4">
+                    <div class="card-header bg-black text-white border-bottom border-secondary py-3 font-cinzel">
+                        <h5 class="m-0 fw-bold tracking-widest text-uppercase">💳 Subscription Track Record</h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <ul class="list-group list-group-flush">
+                            {% for sub in sub_history %}
+                                <li class="list-group-item bg-transparent text-white border-secondary p-3 d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="fw-bold text-light m-0">{{ sub.plan_name }}</h6>
+                                        <small class="text-muted">{{ sub.start_date }} to {{ sub.end_date }}</small>
+                                    </div>
+                                    {% if sub.status == 'active' %}
+                                        <span class="badge bg-success">ACTIVE</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">EXPIRED</span>
+                                    {% endif %}
+                                </li>
+                            {% else %}
+                                <li class="list-group-item bg-transparent text-muted p-4 text-center border-0">No subscription history found.</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="card admin-card shadow-lg">
+                    <div class="card-header bg-black text-white border-bottom border-secondary py-3 font-cinzel">
+                        <h5 class="m-0 fw-bold tracking-widest text-uppercase">⏱️ Training Logs</h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                            <table class="table table-dark table-hover mb-0 align-middle">
+                                <thead class="text-secondary" style="position: sticky; top: 0; background-color: #111;">
+                                    <tr>
+                                        <th>Check In</th>
+                                        <th>Check Out</th>
+                                        <th>Duration</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for session in session_history %}
+                                    <tr>
+                                        <td class="text-light">{{ session.check_in_time }}</td>
+                                        <td class="text-light">{{ session.check_out_time or 'ACTIVE NOW' }}</td>
+                                        <td>
+                                            {% if session.duration_minutes is not none %}
+                                                <strong style="font-family: 'Orbitron', sans-serif;">{{ session.duration_minutes }} min</strong>
+                                            {% else %}
+                                                <span class="text-warning">In Progress</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% else %}
+                                    <tr><td colspan="3" class="text-center text-secondary py-4">No training sessions recorded.</td></tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</body>
+</html>

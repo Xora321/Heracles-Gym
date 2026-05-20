@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html data-bs-theme="dark">
+<head>
+    <title>Edit Member - Gym Heracles</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        body { 
+            background-color: #111111; 
+            background-image: url('/static/creation-bg.jpg');
+            background-size: cover;
+            background-position: center;
+            background-blend-mode: overlay;
+            min-height: 100vh;
+            font-family: -apple-system, sans-serif;
+            display: flex;
+            align-items: center;
+        }
+        .admin-card {
+            background-color: rgba(17, 17, 17, 0.95);
+            border: 1px solid #444;
+            backdrop-filter: blur(8px);
+        }
+        .font-cinzel { font-family: 'Cinzel', serif; }
+    </style>
+</head>
+<body class="text-white">
+
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-6 col-lg-5">
+                
+                <div class="card admin-card shadow-lg">
+                    <div class="card-header bg-black text-white border-bottom border-secondary py-3 font-cinzel">
+                        <h5 class="m-0 fw-bold tracking-widest text-uppercase">✏️ Edit Citizen Record</h5>
+                    </div>
+                    <div class="card-body p-4">
+                        
+                        <form method="POST">
+                            <div class="mb-3">
+                                <label class="form-label text-muted small fw-bold">FULL NAME</label>
+                                <input type="text" name="full_name" class="form-control bg-dark text-white border-secondary" value="{{ target_user.full_name }}" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label text-muted small fw-bold">EMAIL ADDRESS</label>
+                                <input type="email" name="email" class="form-control bg-dark text-white border-secondary" value="{{ target_user.email }}" required>
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="form-label text-muted small fw-bold">IC NUMBER</label>
+                                <input type="text" name="ic_number" class="form-control bg-dark text-white border-secondary" value="{{ target_user.ic_number }}" required>
+                            </div>
+
+                            <div class="d-flex justify-content-between gap-3">
+                                <a href="/admin" class="btn btn-outline-light w-50 fw-bold">Cancel</a>
+                                <button type="submit" class="btn btn-primary w-50 fw-bold border-0" style="background-color: #0d6efd;">Save Updates</button>
+                            </div>
+                        </form>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

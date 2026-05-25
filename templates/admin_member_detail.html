@@ -50,11 +50,32 @@
                         <small class="text-muted text-uppercase d-block mb-1">Email Address</small>
                         <p class="mb-4">{{ target_user.email }}</p>
 
+                        <small class="text-muted text-uppercase d-block mb-1">Phone Number</small>
+                        <p class="mb-4">{{ target_user.phone or 'Not set' }}</p>
+
                         <small class="text-muted text-uppercase d-block mb-1">IC Number (PDPA Protected)</small>
                         <span class="badge bg-secondary text-dark fs-6 mb-4">{{ target_user.ic_number }}</span>
 
+                        <small class="text-muted text-uppercase d-block mb-1">Emergency Contact</small>
+                        <p class="mb-1">{{ target_user.emergency_contact or 'Not set' }}</p>
+                        <small class="text-muted text-uppercase d-block mb-1">Emergency Phone</small>
+                        <p class="mb-4">{{ target_user.emergency_phone or 'Not set' }}</p>
+
+                        <small class="text-muted text-uppercase d-block mb-1">Date of Birth</small>
+                        <p class="mb-4">{{ target_user.date_of_birth | dateformat or 'Not set' }}</p>
+
                         <small class="text-muted text-uppercase d-block mb-1">Account Created</small>
-                        <p class="mb-0 text-secondary">{{ target_user.created_at }}</p>
+                        <p class="mb-4 text-secondary">{{ target_user.created_at }}</p>
+
+                        <small class="text-muted text-uppercase d-block mb-1">PARQ Status</small>
+                        {% if target_user.parq_cleared %}
+                            <span class="badge bg-success mb-4">✔ Cleared</span>
+                        {% else %}
+                            <span class="badge bg-danger mb-4">✘ Not Cleared</span>
+                        {% endif %}
+
+                        <small class="text-muted text-uppercase d-block mb-1 mt-3">Medical Notes</small>
+                        <p class="mb-0 text-secondary">{{ target_user.medical_notes or 'None recorded.' }}</p>
                     </div>
                 </div>
             </div>

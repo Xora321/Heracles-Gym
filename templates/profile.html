@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html data-bs-theme="dark">
+<head>
+    <title>My Profile - Gym Heracles</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background-color: #111111;
+            background-image: url('/static/creation-bg.jpg');
+            background-size: cover;
+            background-position: center;
+            background-blend-mode: overlay;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            font-family: 'Cinzel', serif;
+            padding: 20px 0;
+        }
+        .auth-card {
+            background-color: rgba(17, 17, 17, 0.95);
+            border: 1px solid #444;
+            backdrop-filter: blur(8px);
+        }
+    </style>
+</head>
+<body class="text-white">
+
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-6 col-lg-5">
+
+                <div class="card auth-card shadow-lg">
+                    <div class="card-header bg-black border-bottom border-secondary py-3">
+                        <h5 class="m-0 fw-bold text-uppercase">👤 My Profile</h5>
+                    </div>
+                    <div class="card-body p-4">
+
+                        {% if success %}
+                        <div class="alert alert-success py-2 small font-monospace">{{ success }}</div>
+                        {% endif %}
+
+                        {% if profile %}
+                        <div class="mb-4 border-bottom border-secondary pb-4">
+                            <small class="text-muted text-uppercase d-block mb-1">Full Name</small>
+                            <p class="fw-bold text-light mb-3">{{ profile.full_name }}</p>
+
+                            <small class="text-muted text-uppercase d-block mb-1">Email</small>
+                            <p class="text-light mb-3">{{ profile.email }}</p>
+
+                            <small class="text-muted text-uppercase d-block mb-1">IC Number</small>
+                            <p class="text-light mb-0 font-monospace">{{ profile.ic_number or 'Not available' }}</p>
+                        </div>
+                        {% endif %}
+
+                        <form method="POST">
+                            <div class="mb-3">
+                                <label class="form-label text-muted small fw-bold">PHONE NUMBER</label>
+                                <input type="text" name="phone" class="form-control bg-dark text-white border-secondary"
+                                       placeholder="e.g. 0123456789"
+                                       value="{{ profile.phone if profile and profile.phone not in ('N/A', None) else '' }}">
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label text-muted small fw-bold">EMERGENCY CONTACT NAME</label>
+                                <input type="text" name="emergency_contact" class="form-control bg-dark text-white border-secondary"
+                                       placeholder="e.g. Jane Doe"
+                                       value="{{ profile.emergency_contact if profile and profile.emergency_contact not in ('N/A', None) else '' }}">
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="form-label text-muted small fw-bold">EMERGENCY CONTACT PHONE</label>
+                                <input type="text" name="emergency_phone" class="form-control bg-dark text-white border-secondary"
+                                       placeholder="e.g. 0123456789"
+                                       value="{{ profile.emergency_phone if profile and profile.emergency_phone not in ('N/A', None) else '' }}">
+                            </div>
+
+                            <div class="d-flex gap-3">
+                                <a href="/" class="btn btn-outline-light w-50 fw-bold">← Back</a>
+                                <button type="submit" class="btn btn-primary w-50 fw-bold">Save</button>
+                            </div>
+                        </form>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

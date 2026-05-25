@@ -1,12 +1,21 @@
 from flask import Flask, render_template, request, redirect, url_for, session
 from datetime import date, timedelta
 import pyodbc
+import bcrypt
 import os
-from werkzeug.security import generate_password_hash, check_password_hash
+from dotenv import load_dotenv
 
 
 app = Flask(__name__)
 app.secret_key = "secret_gym_key"
+
+@app.template_filter('dateformat')
+def dateformat(value):
+    if value is None:
+        return ''
+    if hasattr(value, 'strftime'):
+        return value.strftime('%Y-%m-%d')
+    return str(value)[:10]
 
 load_dotenv()
 
@@ -22,6 +31,17 @@ def get_db_connection():
         f'DATABASE={DATABASE};'
         f'UID={USERNAME};'
         f'PWD={PASSWORD};'
+        f'TrustServerCertificate=yes;'
+    )
+    return conn
+
+def get_db_connection_dba():
+    conn = pyodbc.connect(
+        'DRIVER={ODBC Driver 18 for SQL Server};'
+        f'SERVER={SERVER};'
+        f'DATABASE={DATABASE};'
+        'UID=heracles_dba;'
+        'PWD=DbaHeracles@2025;'
         f'TrustServerCertificate=yes;'
     )
     return conn
@@ -84,7 +104,7 @@ def home():
     db.close()
 
     return render_template('dashboard.html',
-                           user=session['email'],
+                           user=session['username'],
                            plan=active_plan,
                            attendance=recent_attendance,
                            is_checked_in=is_checked_in)
@@ -133,7 +153,8 @@ def check_out():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        email = request.form['email']
+        # 1. Grab the username instead of email
+        username = request.form['username']
         password = request.form['password']
 
         db = None
@@ -142,23 +163,13 @@ def login():
             db = get_db_connection()
             cursor = db.cursor()
 
-            # Join users and members to get email and full info
-            cursor.execute("""
-                SELECT u.user_id, u.password_hash, u.role, m.email, m.full_name
-                FROM users u
-                LEFT JOIN members m ON u.user_id = m.user_id
-                WHERE m.email = ? AND u.role = 'member'
-                UNION
-                SELECT u.user_id, u.password_hash, u.role, u.username as email, a.full_name
-                FROM users u
-                LEFT JOIN admins a ON u.user_id = a.user_id
-                WHERE u.username = ? AND u.role = 'admin'
-            """, (email, email))
+            # 2. Much simpler query! Just check the master users table directly
+            cursor.execute("SELECT user_id, password_hash, role, username FROM users WHERE username = ?", (username,))
             user = dictfetchone(cursor)
 
-            if user and check_password_hash(user['password_hash'], password):
+            if user and bcrypt.checkpw(password.encode('utf-8'), user['password_hash'].encode('utf-8')):
                 session['user_id'] = user['user_id']
-                session['email'] = user['email']
+                session['username'] = user['username'] # Changed to store username
                 session['role'] = user['role']
 
                 if user['role'] == 'admin':
@@ -166,7 +177,7 @@ def login():
                 else:
                     return redirect('/')
             else:
-                return render_template('login.html', error="Invalid Email or Password")
+                return render_template('login.html', error="Invalid Username or Password")
         except pyodbc.Error as err:
             return f"Database Error: {err}"
         finally:
@@ -180,12 +191,19 @@ def login():
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
+        # 1. Catch the new username from the form
+        username = request.form['username']
         ic_number = request.form['ic_number']
         full_name = request.form['full_name']
         email = request.form['email']
+        phone = request.form.get('phone', 'N/A').strip() or 'N/A'
+        date_of_birth = request.form.get('date_of_birth', '2000-01-01').strip() or '2000-01-01'
+        emergency_contact = request.form.get('emergency_contact', 'N/A').strip() or 'N/A'
+        emergency_phone = request.form.get('emergency_phone', 'N/A').strip() or 'N/A'
         password = request.form['password']
 
-        hashed_pw = generate_password_hash(password, method='pbkdf2:sha256')
+        salt = bcrypt.gensalt()
+        hashed_pw = bcrypt.hashpw(password.encode('utf-8'), salt).decode('utf-8')
 
         db = None
         cursor = None
@@ -193,26 +211,25 @@ def register():
             db = get_db_connection()
             cursor = db.cursor()
 
-            # Insert into users table first
+            # Insert into users table
             cursor.execute(
                 "INSERT INTO users (username, password_hash, role) VALUES (?, ?, 'member')",
-                (email, hashed_pw)
+                (username, hashed_pw)
             )
 
-            # Get the new user_id
             cursor.execute("SELECT @@IDENTITY")
             user_id = int(cursor.fetchone()[0])
 
-            # Insert into members table
+            # Insert into members table with all fields
             cursor.execute("""
                 INSERT INTO members 
                     (user_id, full_name, ic_number, phone, email, 
                      date_of_birth, emergency_contact, emergency_phone, 
                      parq_cleared, medical_notes)
                 VALUES 
-                    (?, ?, ENCRYPTBYPASSPHRASE('Heracles@Secret2025', ?), 
-                     'N/A', ?, '2000-01-01', 'N/A', 'N/A', 0, NULL)
-            """, (user_id, full_name, ic_number, email))
+                    (?, ?, ENCRYPTBYPASSPHRASE('Heracles@Secret2025', CAST(? AS VARCHAR(100))), 
+                     ?, ?, ?, ?, ?, 0, NULL)
+            """, (user_id, full_name, ic_number, phone, email, date_of_birth, emergency_contact, emergency_phone))
 
             db.commit()
             return redirect('/login')
@@ -226,7 +243,6 @@ def register():
                 db.close()
 
     return render_template('register.html')
-
 # ==========================================
 # ADMIN ROUTES
 # ==========================================
@@ -263,7 +279,7 @@ def admin_dashboard():
     cursor.close()
     db.close()
 
-    return render_template('admin_dashboard.html', user=session['email'], members=members, plans=plans)
+    return render_template('admin_dashboard.html', user=session['username'], members=members, plans=plans)
 
 @app.route('/admin/create-plan', methods=['POST'])
 def create_plan():
@@ -385,14 +401,24 @@ def admin_edit_member(member_id):
         new_name = request.form['full_name']
         new_email = request.form['email']
         new_ic = request.form['ic_number']
+        new_phone = request.form.get('phone', 'N/A').strip() or 'N/A'
+        new_dob = request.form.get('date_of_birth', '2000-01-01').strip() or '2000-01-01'
+        new_emergency_contact = request.form.get('emergency_contact', 'N/A').strip() or 'N/A'
+        new_emergency_phone = request.form.get('emergency_phone', 'N/A').strip() or 'N/A'
+        parq_cleared = 1 if request.form.get('parq_cleared') else 0
+        medical_notes = request.form.get('medical_notes', '').strip() or None
 
         try:
             cursor.execute("""
                 UPDATE members 
-                SET full_name = ?, email = ?, 
-                    ic_number = ENCRYPTBYPASSPHRASE('Heracles@Secret2025', ?)
+                SET full_name = ?, email = ?, phone = ?,
+                    date_of_birth = ?,
+                    emergency_contact = ?, emergency_phone = ?,
+                    ic_number = ENCRYPTBYPASSPHRASE('Heracles@Secret2025', CAST(? AS VARCHAR(100))),
+                    parq_cleared = ?,
+                    medical_notes = ?
                 WHERE member_id = ?
-            """, (new_name, new_email, new_ic, member_id))
+            """, (new_name, new_email, new_phone, new_dob, new_emergency_contact, new_emergency_phone, new_ic, parq_cleared, medical_notes, member_id))
             db.commit()
         except pyodbc.Error as err:
             return f"Database Error: {err}"
@@ -402,42 +428,55 @@ def admin_edit_member(member_id):
 
         return redirect('/admin')
 
-    # GET - fetch member data for the form
-    # template expects: target_user.full_name, target_user.email, target_user.ic_number
-    cursor.execute("""
+    # GET - fetch member data using DBA connection to bypass Dynamic Data Masking
+    db_dba = get_db_connection_dba()
+    cursor_dba = db_dba.cursor()
+    cursor_dba.execute("""
         SELECT 
             m.member_id as user_id,
             m.full_name,
             m.email,
-            CONVERT(VARCHAR, DECRYPTBYPASSPHRASE('Heracles@Secret2025', m.ic_number)) as ic_number
+            m.phone,
+            m.date_of_birth,
+            m.emergency_contact,
+            m.emergency_phone,
+            CONVERT(VARCHAR, DECRYPTBYPASSPHRASE('Heracles@Secret2025', m.ic_number)) as ic_number,
+            m.parq_cleared,
+            m.medical_notes
         FROM members m
         WHERE m.member_id = ?
     """, (member_id,))
-    target_user = dictfetchone(cursor)
+    target_user = dictfetchone(cursor_dba)
 
-    cursor.close()
-    db.close()
+    cursor_dba.close()
+    db_dba.close()
 
     if not target_user:
         return "Member not found", 404
 
-    return render_template('admin_edit_member.html', user=session['email'], target_user=target_user)
+    return render_template('admin_edit_member.html', user=session['username'], target_user=target_user)
 
 @app.route('/admin/member/<int:member_id>')
 def admin_view_member(member_id):
     if 'user_id' not in session or session.get('role') != 'admin':
         return "Unauthorized Access", 403
 
-    db = get_db_connection()
+    db = get_db_connection_dba()
     cursor = db.cursor()
 
-    # template expects: target_user.full_name, target_user.email, target_user.ic_number, target_user.created_at
+    # Use DBA connection to bypass Dynamic Data Masking on email/phone fields
     cursor.execute("""
         SELECT 
             m.member_id as user_id,
             m.full_name,
             m.email,
+            m.phone,
+            m.date_of_birth,
+            m.emergency_contact,
+            m.emergency_phone,
             CONVERT(VARCHAR, DECRYPTBYPASSPHRASE('Heracles@Secret2025', m.ic_number)) as ic_number,
+            m.parq_cleared,
+            m.medical_notes,
             u.created_at
         FROM members m
         JOIN users u ON m.user_id = u.user_id
@@ -469,7 +508,7 @@ def admin_view_member(member_id):
     db.close()
 
     return render_template('admin_member_detail.html',
-                           user=session['email'],
+                           user=session['username'],
                            target_user=target_user,
                            sub_history=sub_history,
                            session_history=session_history)
@@ -541,7 +580,7 @@ def subscription_page():
     db.close()
 
     return render_template('subscription.html',
-                           user=session['email'],
+                           user=session['username'],
                            active_plan=active_plan,
                            past_plans=past_plans)
 
@@ -568,13 +607,111 @@ def sessions_page():
     db.close()
 
     return render_template('sessions.html',
-                           user=session['email'],
+                           user=session['username'],
                            sessions=all_sessions)
+
+@app.route('/profile', methods=['GET', 'POST'])
+def profile():
+    if 'user_id' not in session:
+        return redirect('/login')
+
+    user_id = session['user_id']
+
+    if request.method == 'POST':
+        new_phone = request.form.get('phone', 'N/A').strip() or 'N/A'
+        new_emergency_contact = request.form.get('emergency_contact', 'N/A').strip() or 'N/A'
+        new_emergency_phone = request.form.get('emergency_phone', 'N/A').strip() or 'N/A'
+        db = get_db_connection()
+        cursor = db.cursor()
+        try:
+            cursor.execute("""
+                UPDATE members SET phone = ?, emergency_contact = ?, emergency_phone = ?
+                WHERE user_id = ?
+            """, (new_phone, new_emergency_contact, new_emergency_phone, user_id))
+            db.commit()
+        except pyodbc.Error as err:
+            return f"Database Error: {err}"
+        finally:
+            cursor.close()
+            db.close()
+
+        # Refetch updated profile using DBA connection for unmasked/decrypted data
+        db_dba = get_db_connection_dba()
+        cursor_dba = db_dba.cursor()
+        cursor_dba.execute("""
+            SELECT full_name, email, phone, emergency_contact, emergency_phone,
+                   CONVERT(VARCHAR, DECRYPTBYPASSPHRASE('Heracles@Secret2025', ic_number)) as ic_number
+            FROM members WHERE user_id = ?
+        """, (user_id,))
+        profile_data = dictfetchone(cursor_dba)
+        cursor_dba.close()
+        db_dba.close()
+        return render_template('profile.html', user=session['username'], success="Profile updated!", profile=profile_data)
+
+    # GET - fetch profile using DBA connection to get unmasked email and decrypted IC
+    db_dba = get_db_connection_dba()
+    cursor_dba = db_dba.cursor()
+    cursor_dba.execute("""
+        SELECT full_name, email, phone, emergency_contact, emergency_phone,
+               CONVERT(VARCHAR, DECRYPTBYPASSPHRASE('Heracles@Secret2025', ic_number)) as ic_number
+        FROM members WHERE user_id = ?
+    """, (user_id,))
+    profile_data = dictfetchone(cursor_dba)
+    cursor_dba.close()
+    db_dba.close()
+
+    return render_template('profile.html', user=session['username'], profile=profile_data)
 
 @app.route('/logout')
 def logout():
     session.clear()
     return redirect('/login')
+
+@app.route('/change-password', methods=['GET', 'POST'])
+def change_password():
+    # Make sure the user is actually logged in
+    if 'user_id' not in session:
+        return redirect('/login')
+
+    if request.method == 'POST':
+        current_password = request.form['current_password']
+        new_password = request.form['new_password']
+        confirm_password = request.form['confirm_password']
+
+        # 1. Check if the new passwords match
+        if new_password != confirm_password:
+            return render_template('change_password.html', user=session['username'], error="New passwords do not match.")
+
+        db = get_db_connection()
+        cursor = db.cursor()
+
+        try:
+            # 2. Grab their current hash from the database
+            cursor.execute("SELECT password_hash FROM users WHERE user_id = ?", (session['user_id'],))
+            user_record = cursor.fetchone()
+
+            # 3. Verify their old password is correct using bcrypt
+            # Remember: bcrypt needs strings to be encoded into bytes first!
+            if user_record and bcrypt.checkpw(current_password.encode('utf-8'), user_record[0].encode('utf-8')):
+                
+                # 4. Hash the new password and update the database
+                new_hashed_pw = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+                
+                cursor.execute("UPDATE users SET password_hash = ? WHERE user_id = ?", (new_hashed_pw, session['user_id']))
+                db.commit()
+
+                return render_template('change_password.html', user=session['username'], success="Password updated successfully!")
+            else:
+                return render_template('change_password.html', user=session['username'], error="Incorrect current password.")
+
+        except pyodbc.Error as err:
+            return f"Database Error: {err}"
+        finally:
+            cursor.close()
+            db.close()
+
+    # If it's a GET request, just show the blank form
+    return render_template('change_password.html', user=session['username'])
 
 
 if __name__ == '__main__':

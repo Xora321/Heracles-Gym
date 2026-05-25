@@ -40,6 +40,11 @@
 
             <form method="POST">
                 <div class="mb-3">
+                    <label class="form-label text-muted small fw-bold">CHOOSE A USERNAME</label>
+                    <input type="text" name="username" class="form-control bg-dark text-white border-secondary" required>
+                </div>
+
+                <div class="mb-3">
                     <label class="form-label text-muted small fw-bold">IC NUMBER (REQUIRED FOR PDPA)</label>
                     <input type="text" name="ic_number" class="form-control bg-dark text-white border-secondary" required>
                 </div>
@@ -52,6 +57,26 @@
                 <div class="mb-3">
                     <label class="form-label text-muted small fw-bold">EMAIL</label>
                     <input type="email" name="email" class="form-control bg-dark text-white border-secondary" required>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label text-muted small fw-bold">PHONE NUMBER</label>
+                    <input type="text" name="phone" class="form-control bg-dark text-white border-secondary" placeholder="e.g. 0123456789" required>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label text-muted small fw-bold">DATE OF BIRTH</label>
+                    <input type="date" name="date_of_birth" class="form-control bg-dark text-white border-secondary" required>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label text-muted small fw-bold">EMERGENCY CONTACT NAME</label>
+                    <input type="text" name="emergency_contact" class="form-control bg-dark text-white border-secondary" placeholder="e.g. Jane Doe" required>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label text-muted small fw-bold">EMERGENCY CONTACT PHONE</label>
+                    <input type="text" name="emergency_phone" class="form-control bg-dark text-white border-secondary" placeholder="e.g. 0123456789" required>
                 </div>
 
                 <div class="mb-4">
